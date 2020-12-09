@@ -13,6 +13,8 @@ pub fn build(b: *Builder) void {
     // between Debug, ReleaseSafe, ReleaseFast, and ReleaseSmall.
     const mode = b.standardReleaseOptions();
 
+    const run_all = b.step("runall", "Run all days");
+
     // Set up an exe for each day
     comptime var day = 1;
     inline while (day <= 25) : (day += 1) {
@@ -36,5 +38,7 @@ pub fn build(b: *Builder) void {
 
         const run_step = b.step(dayString, "Run " ++ dayString);
         run_step.dependOn(&run_cmd.step);
+
+        run_all.dependOn(run_step);
     }
 }

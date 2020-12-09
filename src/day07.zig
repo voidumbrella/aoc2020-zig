@@ -1,7 +1,8 @@
 const std = @import("std");
 const ArrayList = std.ArrayList;
-const Map = std.StringHashMap;
+const HashMap = std.StringHashMap;
 const Allocator = std.mem.Allocator;
+const Timer = std.time.Timer;
 const assert = std.debug.assert;
 const print = std.debug.print;
 
@@ -11,7 +12,7 @@ var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
 const allocator = &arena.allocator;
 
 const Child = struct { count: usize, color: []const u8 };
-var rules = Map([]Child).init(allocator);
+var rules = HashMap([]Child).init(allocator);
 
 fn search(bag: []const u8) bool {
     if (std.mem.eql(u8, bag, "shiny gold")) return true;
@@ -28,6 +29,8 @@ fn bags_inside(bag: []const u8) u64 {
 }
 
 pub fn main() !void {
+    var timer = try Timer.start();
+
     var line_iterator = std.mem.split(input, "\n");
 
     var part1_ans: u64 = 0;
@@ -59,6 +62,6 @@ pub fn main() !void {
 
     part2_ans = bags_inside("shiny gold");
 
-    print("=== Day 07 ===\n", .{});
+    print("=== Day 07 === ({} µs) \n", .{timer.lap() / 1000});
     print("Part 1: {}\nPart 2: {}\n", .{ part1_ans, part2_ans });
 }

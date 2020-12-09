@@ -1,16 +1,18 @@
 const std = @import("std");
 const ArrayList = std.ArrayList;
-const HashMap = std.HashMap;
 const Allocator = std.mem.Allocator;
+const Timer = std.time.Timer;
 const assert = std.debug.assert;
 const print = std.debug.print;
+
+const input = @embedFile("../input/day01_input.txt");
 
 var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
 const allocator = &arena.allocator;
 
 pub fn main() !void {
-    const f = try std.fs.cwd().openFile("input/day01_input.txt", .{});
-    const input = try f.readToEndAlloc(allocator, std.math.maxInt(u32));
+    var timer = try Timer.start();
+
     var line_iterator = std.mem.split(input, "\n");
 
     var nums = ArrayList(u32).init(allocator);
@@ -19,12 +21,14 @@ pub fn main() !void {
         try nums.append(try std.fmt.parseInt(u32, line, 10));
     }
 
-    print("=== Day 01 ===\n", .{});
+    var part1_ans: u64 = 0;
+    var part2_ans: u64 = 0;
+
     // O(n^2) go brrrr
     outer: for (nums.items) |a, ai| {
         for (nums.items[ai + 1 ..]) |b| {
             if (a + b == 2020) {
-                print("Part 1: {}\n", .{a * b});
+                part1_ans = a * b;
                 break :outer;
             }
         }
@@ -35,10 +39,13 @@ pub fn main() !void {
         for (nums.items[ai + 1 ..]) |b, bi| {
             for (nums.items[bi + 1 ..]) |c, ci| {
                 if (a + b + c == 2020) {
-                    print("Part 2: {}\n", .{a * b * c});
+                    part2_ans = a * b * c;
                     break :outer;
                 }
             }
         }
     }
+
+    print("=== Day 01 === ({} µs) \n", .{timer.lap() / 1000});
+    print("Part 1: {}\nPart 2: {}\n", .{ part1_ans, part2_ans });
 }

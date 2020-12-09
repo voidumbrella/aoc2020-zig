@@ -1,6 +1,7 @@
 const std = @import("std");
 const ArrayList = std.ArrayList;
 const Allocator = std.mem.Allocator;
+const Timer = std.time.Timer;
 const assert = std.debug.assert;
 const print = std.debug.print;
 
@@ -55,6 +56,8 @@ const Vm = struct {
 };
 
 pub fn main() !void {
+    var timer = try Timer.start();
+
     var part_iterator = std.mem.tokenize(input, " \n");
 
     var part1_ans: i64 = 0;
@@ -110,6 +113,6 @@ pub fn main() !void {
         }
     }
 
-    print("=== Day 08 ===\n", .{});
+    print("=== Day 08 === ({} µs) \n", .{timer.lap() / 1000});
     print("Part 1: {}\nPart 2: {}\n", .{ part1_ans, part2_ans });
 }

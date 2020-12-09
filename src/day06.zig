@@ -1,15 +1,18 @@
 const std = @import("std");
 const ArrayList = std.ArrayList;
 const Allocator = std.mem.Allocator;
+const Timer = std.time.Timer;
 const assert = std.debug.assert;
 const print = std.debug.print;
+
+const input = @embedFile("../input/day06_input.txt");
 
 var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
 const allocator = &arena.allocator;
 
 pub fn main() !void {
-    const f = try std.fs.cwd().openFile("input/day06_input.txt", .{});
-    const input = try f.readToEndAlloc(allocator, std.math.maxInt(u64));
+    var timer = try Timer.start();
+
     var group_iterator = std.mem.split(input, "\n\n");
 
     var part1_ans: u64 = 0;
@@ -32,6 +35,6 @@ pub fn main() !void {
         }
     }
 
-    print("=== Day 06 ===\n", .{});
+    print("=== Day 06 === ({} µs) \n", .{timer.lap() / 1000});
     print("Part 1: {}\nPart 2: {}\n", .{ part1_ans, part2_ans });
 }
