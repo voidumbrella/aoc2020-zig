@@ -48,33 +48,27 @@ pub fn main() !void {
         }
     }
 
-    const N = nums.items.len;
-    var subsets = try allocator.alloc(u64, N * N);
-    for (nums.items) |n, i| {
-        subsets[i * N + i] = n;
-    }
-
-    var size: usize = 2;
-
-    search: while (size < nums.items.len) : (size += 1) {
-        for (nums.items[0 .. nums.items.len - size + 1]) |n, i| {
-            const sub = subsets[(i + 1) * N + (i + size - 1)];
-
-            if (n + sub == part1_ans) {
-                var min: u64 = std.math.maxInt(u64);
-                var max: u64 = 0;
-                for (nums.items[i .. i + size]) |m| {
-                    if (m < min) min = m;
-                    if (m > max) max = m;
-                }
-
-                part2_ans = min + max;
-                break :search;
-            }
-
-            subsets[(i * N) + (i + size - 1)] = n + sub;
+    var sliding_sum: u64 = 0;
+    var i: usize = 0;
+    var j: usize = 0;
+    while (sliding_sum != part1_ans) {
+        if (sliding_sum > part1_ans) {
+            sliding_sum -= nums.items[i];
+            i += 1;
+        } else {
+            sliding_sum += nums.items[j];
+            j += 1;
         }
+        assert(j < nums.items.len);
     }
+
+    var min: u64 = std.math.maxInt(u64);
+    var max: u64 = 0;
+    for (nums.items[i .. j + 1]) |m| {
+        if (m < min) min = m;
+        if (m > max) max = m;
+    }
+    part2_ans = min + max;
 
     print("=== Day 09 === ({} µs) \n", .{timer.lap() / 1000});
     print("Part 1: {}\nPart 2: {}\n", .{ part1_ans, part2_ans });
