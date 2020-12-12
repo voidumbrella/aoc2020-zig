@@ -58,6 +58,6 @@ pub fn main() !void {
         }
     }
 
-    print("=== Day 01 === ({} µs) \n", .{timer.lap() / 1000});
+    print("=== Day 05 === ({} µs) \n", .{timer.lap() / 1000});
     print("Part 1: {}\nPart 2: {}\n", .{ part1_ans, part2_ans });
 }

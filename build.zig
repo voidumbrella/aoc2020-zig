@@ -14,7 +14,7 @@ pub fn build(b: *Builder) void {
     inline while (day <= 25) : (day += 1) {
         @setEvalBranchQuota(100000);
         const day_string = comptime std.fmt.comptimePrint("day{:0>2}", .{day});
-        const source_file = "src/" ++ dayString ++ ".zig";
+        const source_file = "src/" ++ day_string ++ ".zig";
 
         const exe = b.addExecutable(day_string, source_file);
         exe.setTarget(target);
@@ -29,7 +29,7 @@ pub fn build(b: *Builder) void {
         if (b.args) |args|
             run_cmd.addArgs(args);
 
-        const run_step = b.step(dayString, "Run " ++ dayString);
+        const run_step = b.step(day_string, "Run " ++ day_string);
         run_step.dependOn(&run_cmd.step);
 
         run_all.dependOn(run_step);
