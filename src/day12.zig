@@ -13,128 +13,100 @@ const allocator = &arena.allocator;
 pub fn main() !void {
     var timer = try Timer.start();
 
-    const Step = struct {
-        cmd: u8,
-        arg: i16,
-    };
-
-    var steps = ArrayList(Step).init(allocator);
-
     var line_iterator = std.mem.tokenize(input, "\n");
-    while (line_iterator.next()) |line| {
-        var cmd = line[0];
-        var arg = try std.fmt.parseInt(i16, line[1..], 10);
-        try steps.append(.{ .cmd = cmd, .arg = arg });
-    }
 
     var part1_ans: u64 = 0;
-    {
-        var x: i64 = 0;
-        var y: i64 = 0;
-        var dx: i64 = 1;
-        var dy: i64 = 0;
-        for (steps.items) |step| {
-            const cmd = step.cmd;
-            const arg = step.arg;
-
-            switch (cmd) {
-                'F' => {
-                    x += arg * dx;
-                    y += arg * dy;
-                },
-
-                'N' => y += arg,
-                'S' => y -= arg,
-
-                'E' => x += arg,
-                'W' => x -= arg,
-
-                'R' => if (arg == 90) {
-                    const tmp = dy;
-                    dy = -dx;
-                    dx = tmp;
-                } else if (arg == 180) {
-                    dx = -dx;
-                    dy = -dy;
-                } else if (arg == 270) {
-                    const tmp = dy;
-                    dy = dx;
-                    dx = -tmp;
-                } else unreachable,
-                'L' => if (arg == 90) {
-                    const tmp = dy;
-                    dy = dx;
-                    dx = -tmp;
-                } else if (arg == 180) {
-                    dx = -dx;
-                    dy = -dy;
-                } else if (arg == 270) {
-                    const tmp = dy;
-                    dy = -dx;
-                    dx = tmp;
-                } else unreachable,
-                else => unreachable,
-            }
-        }
-        part1_ans = @intCast(u64, (try std.math.absInt(x)) + (try std.math.absInt(y)));
-    }
-
     var part2_ans: u64 = 0;
-    {
-        var x: i64 = 0;
-        var y: i64 = 0;
-        var dx: i64 = 10;
-        var dy: i64 = 1;
 
-        for (steps.items) |step| {
-            const cmd = step.cmd;
-            const arg = step.arg;
+    var x_1: i64 = 0;
+    var y_1: i64 = 0;
+    var dx_1: i64 = 1;
+    var dy_1: i64 = 0;
 
-            switch (cmd) {
-                'F' => {
-                    var i: i64 = 0;
-                    while (i < arg) : (i += 1) {
-                        x += dx;
-                        y += dy;
-                    }
-                },
+    var x_2: i64 = 0;
+    var y_2: i64 = 0;
+    var dx_2: i64 = 10;
+    var dy_2: i64 = 1;
 
-                'N' => dy += arg,
-                'S' => dy -= arg,
+    while (line_iterator.next()) |line| {
+        const cmd = line[0];
+        const arg = try std.fmt.parseInt(i16, line[1..], 10);
 
-                'E' => dx += arg,
-                'W' => dx -= arg,
+        switch (cmd) {
+            'F' => {
+                x_1 += arg * dx_1;
+                y_1 += arg * dy_1;
 
-                'R' => if (arg == 90) {
-                    const tmp = dy;
-                    dy = -dx;
-                    dx = tmp;
-                } else if (arg == 180) {
-                    dx = -dx;
-                    dy = -dy;
-                } else if (arg == 270) {
-                    const tmp = dy;
-                    dy = dx;
-                    dx = -tmp;
-                } else unreachable,
-                'L' => if (arg == 90) {
-                    const tmp = dy;
-                    dy = dx;
-                    dx = -tmp;
-                } else if (arg == 180) {
-                    dx = -dx;
-                    dy = -dy;
-                } else if (arg == 270) {
-                    const tmp = dy;
-                    dy = -dx;
-                    dx = tmp;
-                } else unreachable,
+                var i: i64 = 0;
+                while (i < arg) : (i += 1) {
+                    x_2 += dx_2;
+                    y_2 += dy_2;
+                }
+            },
 
-                else => unreachable,
-            }
+            'N' => {
+                y_1 += arg;
+                dy_2 += arg;
+            },
+            'S' => {
+                y_1 -= arg;
+                dy_2 -= arg;
+            },
+
+            'E' => {
+                x_1 += arg;
+                dx_2 += arg;
+            },
+            'W' => {
+                x_1 -= arg;
+                dx_2 -= arg;
+            },
+
+            'R' => if (arg == 90) {
+                var tmp = dy_1;
+                dy_1 = -dx_1;
+                dx_1 = tmp;
+                tmp = dy_2;
+                dy_2 = -dx_2;
+                dx_2 = tmp;
+            } else if (arg == 180) {
+                dx_1 = -dx_1;
+                dy_1 = -dy_1;
+                dx_2 = -dx_2;
+                dy_2 = -dy_2;
+            } else if (arg == 270) {
+                var tmp = dy_1;
+                dy_1 = dx_1;
+                dx_1 = -tmp;
+                tmp = dy_2;
+                dy_2 = dx_2;
+                dx_2 = -tmp;
+            } else unreachable,
+            'L' => if (arg == 90) {
+                var tmp = dy_1;
+                dy_1 = dx_1;
+                dx_1 = -tmp;
+                tmp = dy_2;
+                dy_2 = dx_2;
+                dx_2 = -tmp;
+            } else if (arg == 180) {
+                dx_1 = -dx_1;
+                dy_1 = -dy_1;
+                dx_2 = -dx_2;
+                dy_2 = -dy_2;
+            } else if (arg == 270) {
+                var tmp = dy_1;
+                dy_1 = -dx_1;
+                dx_1 = tmp;
+                tmp = dy_2;
+                dy_2 = -dx_2;
+                dx_2 = tmp;
+            } else unreachable,
+            else => unreachable,
         }
-        part2_ans = @intCast(u64, (try std.math.absInt(x)) + (try std.math.absInt(y)));
     }
+    part1_ans = @intCast(u64, (try std.math.absInt(x_1)) + (try std.math.absInt(y_1)));
+    part2_ans = @intCast(u64, (try std.math.absInt(x_2)) + (try std.math.absInt(y_2)));
 
     print("=== Day 12 ({} µs) ===\n", .{timer.lap() / 1000});
     print("Part 1: {}\nPart 2: {}\n", .{ part1_ans, part2_ans });
