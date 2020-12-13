@@ -36,12 +36,8 @@ pub fn main() !void {
             'F' => {
                 x_1 += arg * dx_1;
                 y_1 += arg * dy_1;
-
-                var i: i64 = 0;
-                while (i < arg) : (i += 1) {
-                    x_2 += dx_2;
-                    y_2 += dy_2;
-                }
+                x_2 += arg * dx_2;
+                y_2 += arg * dy_2;
             },
 
             'N' => {
@@ -105,8 +101,8 @@ pub fn main() !void {
             else => unreachable,
         }
     }
-    part1_ans = @intCast(u64, (try std.math.absInt(x_1)) + (try std.math.absInt(y_1)));
-    part2_ans = @intCast(u64, (try std.math.absInt(x_2)) + (try std.math.absInt(y_2)));
+    part1_ans = std.math.absCast(x_1) + std.math.absCast(y_1);
+    part2_ans = std.math.absCast(x_2) + std.math.absCast(y_2);
 
     print("=== Day 12 ({} µs) ===\n", .{timer.lap() / 1000});
     print("Part 1: {}\nPart 2: {}\n", .{ part1_ans, part2_ans });
