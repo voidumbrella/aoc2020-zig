@@ -104,6 +104,6 @@ pub fn main() !void {
     part1_ans = std.math.absCast(x_1) + std.math.absCast(y_1);
     part2_ans = std.math.absCast(x_2) + std.math.absCast(y_2);
 
-    print("=== Day 12 ({} µs) ===\n", .{timer.lap() / 1000});
+    print("=== Day 12 === ({} µs)\n", .{timer.lap() / 1000});
     print("Part 1: {}\nPart 2: {}\n", .{ part1_ans, part2_ans });
 }

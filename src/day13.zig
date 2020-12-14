@@ -10,7 +10,7 @@ const input = @embedFile("../input/day13_input.txt");
 var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
 const allocator = &arena.allocator;
 
-// Returns (g, x, y) such that a * x + b * y = g = gcd(a, b)
+// Finds (g, x, y) such that a * x + b * y = g = gcd(a, b)
 fn egcd(a: i64, b: i64, x: *i64, y: *i64) i64 {
     if (a == 0) {
         x.* = 0;
@@ -25,12 +25,14 @@ fn egcd(a: i64, b: i64, x: *i64, y: *i64) i64 {
     }
 }
 
+// a * x + m * y = 1
+// a * x = 1 (mod m)
 fn modinv(a: i64, m: i64) i64 {
     var x: i64 = undefined;
     var y: i64 = undefined;
     const g = egcd(a, m, &x, &y);
     assert(g == 1);
-    return @mod(@mod(x, m) + m, m);
+    return x;
 }
 
 pub fn main() !void {
@@ -111,6 +113,6 @@ pub fn main() !void {
     part1_ans = min_time * min_id;
     part2_ans = b;
 
-    print("=== Day 13 ({} µs) ===\n", .{timer.lap() / 1000});
+    print("=== Day 13 === ({} µs)\n", .{timer.lap() / 1000});
     print("Part 1: {}\nPart 2: {}\n", .{ part1_ans, part2_ans });
 }
