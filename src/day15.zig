@@ -57,7 +57,7 @@ pub fn main() !void {
         age = new_age;
         last_said = age;
     }
-    part1_ans = last_said;
+    part2_ans = last_said;
 
     print("=== Day 15 === ({} µs)\n", .{timer.lap() / 1000});
     print("Part 1: {}\nPart 2: {}\n", .{ part1_ans, part2_ans });
