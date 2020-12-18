@@ -1,5 +1,3 @@
-/// This code sucks, and is slow, and will segfault since I actually never resize the grid
-/// But I don't care about this enough to improve it
 const std = @import("std");
 const ArrayList = std.ArrayList;
 const Allocator = std.mem.Allocator;
@@ -12,76 +10,71 @@ const input = @embedFile("../input/day17_input.txt");
 var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
 const allocator = &arena.allocator;
 
-const N = 20;
+const Point = struct {
+    x: i64,
+    y: i64,
+    z: i64,
+    w: i64,
+};
+
+const Map = std.AutoHashMap(Point, void);
 
 const Dimension = struct {
-    grid: []bool,
-    min_x: isize,
-    max_x: isize,
-    min_y: isize,
-    max_y: isize,
-    min_z: isize,
-    max_z: isize,
-    min_w: isize,
-    max_w: isize,
+    points: Map,
+    need_check: Map,
 
-    fn create() Dimension {
-        var p = allocator.alloc(bool, N * N * N * N) catch unreachable;
+    fn init(a: *Allocator) Dimension {
         return Dimension{
-            .grid = p,
-            .min_x = 0,
-            .max_x = 0,
-            .min_y = 0,
-            .max_y = 0,
-            .min_z = 0,
-            .max_z = 0,
-            .min_w = 0,
-            .max_w = 0,
+            .points = Map.init(a),
+            .need_check = Map.init(a),
         };
     }
 
-    fn clone(self: *Dimension) Dimension {
-        var p = allocator.alloc(bool, N * N * N * N) catch unreachable;
-        std.mem.copy(bool, p, self.grid);
-        return Dimension{
-            .grid = p,
-            .min_x = self.min_x,
-            .max_x = self.max_x,
-            .min_y = self.min_y,
-            .max_y = self.max_y,
-            .min_z = self.min_z,
-            .max_z = self.max_z,
-            .min_w = self.min_w,
-            .max_w = self.max_w,
-        };
+    fn set(self: *Dimension, point: Point) !void {
+        try self.points.put(point, .{});
+
+        var dx: i64 = -1;
+        while (dx <= 1) : (dx += 1) {
+            var dy: i64 = -1;
+            while (dy <= 1) : (dy += 1) {
+                var dz: i64 = -1;
+                while (dz <= 1) : (dz += 1) {
+                    try self.need_check.put(Point{
+                        .x = point.x + dx,
+                        .y = point.y + dy,
+                        .z = point.z + dz,
+                        .w = point.w,
+                    }, .{});
+                }
+            }
+        }
     }
 
-    fn translate(x: isize, y: isize, z: isize, w: isize) usize {
-        return @intCast(usize, (N / 2 + w) * N * N * N + (N / 2 + z) * N * N + (N / 2 + y) * N + (N / 2 + x));
+    fn hyperSet(self: *Dimension, point: Point) !void {
+        try self.points.put(point, .{});
+
+        var dx: i64 = -1;
+        while (dx <= 1) : (dx += 1) {
+            var dy: i64 = -1;
+            while (dy <= 1) : (dy += 1) {
+                var dz: i64 = -1;
+                while (dz <= 1) : (dz += 1) {
+                    var dw: i64 = -1;
+                    while (dw <= 1) : (dw += 1) {
+                        try self.need_check.put(Point{
+                            .x = point.x + dx,
+                            .y = point.y + dy,
+                            .z = point.z + dz,
+                            .w = point.w + dw,
+                        }, .{});
+                    }
+                }
+            }
+        }
     }
 
-    fn isActive(self: *Dimension, x: isize, y: isize, z: isize, w: isize) bool {
-        return self.grid[translate(x, y, z, w)];
-    }
-
-    fn set(self: *Dimension, x: isize, y: isize, z: isize, w: isize) void {
-        if (x < self.min_x) self.min_x = x;
-        if (x > self.max_x) self.max_x = x;
-        if (y < self.min_y) self.min_y = y;
-        if (y > self.max_y) self.max_y = y;
-        if (z < self.min_z) self.min_z = z;
-        if (z > self.max_z) self.max_z = z;
-        if (w < self.min_w) self.min_w = w;
-        if (w > self.max_w) self.max_w = w;
-        self.grid[translate(x, y, z, w)] = true;
-    }
-
-    fn clear(self: *Dimension, x: isize, y: isize, z: isize, w: isize) void {
-        self.grid[translate(x, y, z, w)] = false;
-    }
-
-    fn neighbors(self: *Dimension, x: isize, y: isize, z: isize) u64 {
-        var count: u64 = 0;
+    fn neighbors(self: *Dimension, point: Point) u16 {
+        var count: u16 = 0;
 
         var dx: i64 = -1;
         while (dx <= 1) : (dx += 1) {
@@ -90,15 +83,21 @@ const Dimension = struct {
                 var dz: i64 = -1;
                 while (dz <= 1) : (dz += 1) {
                     if (dx == 0 and dy == 0 and dz == 0) continue;
-                    if (self.isActive(x + dx, y + dy, z + dz, 0)) count += 1;
+                    if (self.points.get(Point{
+                        .x = point.x + dx,
+                        .y = point.y + dy,
+                        .z = point.z + dz,
+                        .w = point.w,
+                    }) != null) count += 1;
                 }
             }
         }
+
         return count;
     }
 
-    fn hyperNeighbors(self: *Dimension, x: isize, y: isize, z: isize, w: isize) u64 {
-        var count: u64 = 0;
+    fn hyperNeighbors(self: *Dimension, point: Point) u16 {
+        var count: u16 = 0;
 
         var dx: i64 = -1;
         while (dx <= 1) : (dx += 1) {
@@ -109,59 +108,62 @@ const Dimension = struct {
                     var dw: i64 = -1;
                     while (dw <= 1) : (dw += 1) {
                         if (dx == 0 and dy == 0 and dz == 0 and dw == 0) continue;
-                        if (self.isActive(x + dx, y + dy, z + dz, w + dw)) count += 1;
+                        if (self.points.get(Point{
+                            .x = point.x + dx,
+                            .y = point.y + dy,
+                            .z = point.z + dz,
+                            .w = point.w + dw,
+                        }) != null) count += 1;
                     }
                 }
             }
         }
+
         return count;
     }
 
-    fn update(self: *Dimension) void {
-        var cloned = self.clone();
-        var z: isize = cloned.min_z - 1;
-        while (z <= cloned.max_z + 1) : (z += 1) {
-            var y: isize = cloned.min_y - 1;
-            while (y <= cloned.max_y + 1) : (y += 1) {
-                var x: isize = cloned.min_x - 1;
-                while (x <= cloned.max_x + 1) : (x += 1) {
-                    const n = cloned.neighbors(x, y, z);
-                    if (cloned.isActive(x, y, z, 0)) {
-                        if (n != 2 and n != 3)
-                            self.clear(x, y, z, 0);
-                    } else {
-                        if (n == 3)
-                            self.set(x, y, z, 0);
-                    }
-                }
+    fn step(self: *Dimension) !void {
+        var new = Dimension.init(allocator);
+
+        var iterator = self.need_check.iterator();
+        while (iterator.next()) |e| {
+            const point = e.key;
+            const ns = self.neighbors(point);
+            if (self.points.get(point) != null) {
+                if (ns == 2 or ns == 3)
+                    try new.set(point);
+            } else {
+                if (ns == 3)
+                    try new.set(point);
             }
         }
-        allocator.free(cloned.grid);
+
+        var tmp = self.*;
+        self.* = new;
+        tmp.points.deinit();
+        tmp.need_check.deinit();
     }
 
-    fn hyperUpdate(self: *Dimension) void {
-        var cloned = self.clone();
-        var w: isize = cloned.min_w - 1;
-        while (w <= cloned.max_w + 1) : (w += 1) {
-            var z: isize = cloned.min_z - 1;
-            while (z <= cloned.max_z + 1) : (z += 1) {
-                var y: isize = cloned.min_y - 1;
-                while (y <= cloned.max_y + 1) : (y += 1) {
-                    var x: isize = cloned.min_x - 1;
-                    while (x <= cloned.max_x + 1) : (x += 1) {
-                        const n = cloned.hyperNeighbors(x, y, z, w);
-                        if (cloned.isActive(x, y, z, w)) {
-                            if (n != 2 and n != 3)
-                                self.clear(x, y, z, w);
-                        } else {
-                            if (n == 3)
-                                self.set(x, y, z, w);
-                        }
-                    }
-                }
+    fn hyperStep(self: *Dimension) !void {
+        var new = Dimension.init(allocator);
+
+        var iterator = self.need_check.iterator();
+        while (iterator.next()) |e| {
+            const point = e.key;
+            const ns = self.hyperNeighbors(point);
+            if (self.points.get(point) != null) {
+                if (ns == 2 or ns == 3)
+                    try new.hyperSet(point);
+            } else {
+                if (ns == 3)
+                    try new.hyperSet(point);
             }
         }
-        allocator.free(cloned.grid);
+
+        var tmp = self.*;
+        self.* = new;
+        tmp.points.deinit();
+        tmp.need_check.deinit();
     }
 };
 
@@ -173,14 +175,22 @@ pub fn main() !void {
     var part1_ans: u64 = 0;
     var part2_ans: u64 = 0;
 
-    var dimension = Dimension.create();
+    var dim = Dimension.init(allocator);
+    var hyperdim = Dimension.init(allocator);
     {
         var y: i64 = 0;
         while (line_iterator.next()) |line| {
             var x: i64 = 0;
             for (line) |c| {
                 if (c == '#') {
-                    dimension.set(x, y, 0, 0);
+                    const p = Point{
+                        .x = x,
+                        .y = y,
+                        .z = 0,
+                        .w = 0,
+                    };
+                    try dim.set(p);
+                    try hyperdim.hyperSet(p);
                 }
                 x += 1;
             }
@@ -188,29 +198,13 @@ pub fn main() !void {
         }
     }
 
-    var part1 = dimension.clone();
-
-    {
-        var i: usize = 0;
-        while (i < 6) : (i += 1)
-            part1.update();
-
-        for (part1.grid) |b| {
-            if (b) part1_ans += 1;
-        }
+    var i: usize = 0;
+    while (i < 6) : (i += 1) {
+        try dim.step();
+        try hyperdim.hyperStep();
     }
-
-    var part2 = dimension.clone();
-
-    {
-        var i: usize = 0;
-        while (i < 6) : (i += 1)
-            part2.hyperUpdate();
-
-        for (part2.grid) |b| {
-            if (b) part2_ans += 1;
-        }
-    }
+    part1_ans = dim.points.count();
+    part2_ans = hyperdim.points.count();
 
     print("=== Day 17 === ({} µs)\n", .{timer.lap() / 1000});
     print("Part 1: {}\nPart 2: {}\n", .{ part1_ans, part2_ans });
